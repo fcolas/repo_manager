@@ -1,6 +1,7 @@
 import argparse
 import os
 from subprocess import check_output, CalledProcessError
+from pprint import pformat
 
 
 def get_config(git_dir):
@@ -15,6 +16,8 @@ def get_config(git_dir):
         for k in list(config.keys()):
             if k.startswith('core.'):
                 config.pop(k)   # remove core parameters
+            elif k.startswith('gui.'):
+                config.pop(k)   # remove gui parameters
         return config
     except CalledProcessError:
         raise ValueError("%s does not seem to be a proper git repository." %
@@ -81,13 +84,24 @@ def main():
                         help='the directories to search repositories in.')
     parser.add_argument('-e', '--exclude', nargs='+', default=[],
                         help='directories to exclude from search.')
+    parser.add_argument('-f', '--repo_file', nargs=1,
+                        help='file listing of a repository.')
     args = parser.parse_args()
     # listing
     if args.list is not None:
         if not args.list:
             args.list = ['.']
-        for repo_type, repo_dir, config in list_repo(args.list, args.exclude):
-            print('%s: %s' % (repo_type, repo_dir))
+        if args.repo_file is not None:
+            with open(args.repo_file[0], 'w') as repo_file:
+                # TODO better serialization
+                repo_file.write(pformat(list(list_repo(args.list,
+                                                       args.exclude)),
+                                        indent=2, width=1))
+                repo_file.write('\n')
+        else:
+            for repo_type, repo_dir, config in list_repo(args.list,
+                                                         args.exclude):
+                print('%s: %s' % (repo_type, repo_dir))
 
 
 if __name__ == '__main__':
