@@ -48,13 +48,12 @@ def get_svn_root(svn_dir):
 
 def list_repo(directory):
     """Find recursively git and svn repositories."""
-    git_repos = []
     svn_repos = []
     for dirpath, dirnames, filenames in os.walk(directory):
         if '.git' in dirnames:
             try:
                 config = get_config(dirpath)
-                git_repos.append((dirpath, config))
+                yield ('git', dirpath, config)
             except ValueError as e:
                 print(e)
         elif '.svn' in dirnames:
@@ -63,24 +62,23 @@ def list_repo(directory):
                 continue
             try:
                 repo_root = get_svn_root(dirpath)
-                svn_repos.append((dirpath, repo_root))
+                svn_repos.append(dirpath)
+                yield ('svn', dirpath, repo_root)
             except ValueError as e:
                 print(e)
-    return git_repos, svn_repos
 
 
 def main():
     # getting parameters
-    parser = argparse.ArgumentParser(description="Manage repositories.")
-    parser.add_argument('directory',
-                        help='the directory to start searching in.')
+    parser = argparse.ArgumentParser(description='Manage repositories.')
+    parser.add_argument('-l', '--list', nargs='+',
+                        help='the directories to search repositories in.')
     args = parser.parse_args()
-    # invoking main function
-    git_repos, svn_repos = list_repo(args.directory)
-    for r in git_repos:
-        print('git', r)
-    for r in svn_repos:
-        print('svn', r)
+    # listing
+    if args.list:
+        for list_dir in args.list:
+            for repo_type, repo_dir, config in list_repo(list_dir):
+                print('%s: %s' % (repo_type, repo_dir))
 
 
 if __name__ == '__main__':
