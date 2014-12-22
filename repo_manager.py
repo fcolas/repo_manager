@@ -46,39 +46,48 @@ def get_svn_root(svn_dir):
             os.chdir(cwd)
 
 
-def list_repo(directory):
+def list_repo(directories, excluded_dirs):
     """Find recursively git and svn repositories."""
     svn_repos = []
-    for dirpath, dirnames, filenames in os.walk(directory):
-        if '.git' in dirnames:
-            try:
-                config = get_config(dirpath)
-                yield ('git', dirpath, config)
-            except ValueError as e:
-                print(e)
-        elif '.svn' in dirnames:
-            if any(dirpath.startswith(svn_repo) for svn_repo in svn_repos):
-                # don't allow svn repos inside others (assumed to be externals)
+    done_dirs = []
+    for directory in directories:
+        if any(directory.startswith(done_dir) for done_dir in done_dirs):
+            continue
+        for dirpath, dirnames, filenames in os.walk(directory):
+            if any(dirpath.startswith(excluded) for excluded in excluded_dirs):
                 continue
-            try:
-                repo_root = get_svn_root(dirpath)
-                svn_repos.append(dirpath)
-                yield ('svn', dirpath, repo_root)
-            except ValueError as e:
-                print(e)
+            if '.git' in dirnames:
+                try:
+                    config = get_config(dirpath)
+                    yield ('git', dirpath, config)
+                except ValueError as e:
+                    print(e)
+            elif '.svn' in dirnames:
+                if any(dirpath.startswith(svn_repo) for svn_repo in svn_repos):
+                    # don't allow svn repos inside others (externals assumed)
+                    continue
+                try:
+                    repo_root = get_svn_root(dirpath)
+                    svn_repos.append(dirpath)
+                    yield ('svn', dirpath, repo_root)
+                except ValueError as e:
+                    print(e)
 
 
 def main():
     # getting parameters
     parser = argparse.ArgumentParser(description='Manage repositories.')
-    parser.add_argument('-l', '--list', nargs='+',
+    parser.add_argument('-l', '--list', nargs='*',
                         help='the directories to search repositories in.')
+    parser.add_argument('-e', '--exclude', nargs='+', default=[],
+                        help='directories to exclude from search.')
     args = parser.parse_args()
     # listing
-    if args.list:
-        for list_dir in args.list:
-            for repo_type, repo_dir, config in list_repo(list_dir):
-                print('%s: %s' % (repo_type, repo_dir))
+    if args.list is not None:
+        if not args.list:
+            args.list = ['.']
+        for repo_type, repo_dir, config in list_repo(args.list, args.exclude):
+            print('%s: %s' % (repo_type, repo_dir))
 
 
 if __name__ == '__main__':
