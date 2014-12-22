@@ -24,6 +24,28 @@ def get_config(git_dir):
         os.chdir(cwd)
 
 
+def get_svn_root(svn_dir):
+    """Find the root of a svn repository."""
+    with open('/dev/null', 'a') as dev_null:
+        try:
+            cwd = os.getcwd()
+            os.chdir(svn_dir)
+            out = check_output(['svn', 'info'], universal_newlines=True,
+                               stderr=dev_null)
+            config = dict(line.split(': ', 1) for line in
+                          out.strip().split('\n') if line)
+            return config['Repository Root']
+        except CalledProcessError:
+            raise ValueError("%s does not seem to be a proper svn repository." %
+                             svn_dir)
+        except KeyError:
+            raise ValueError("Could not deduce the address of the repository in"
+                             " %s." % svn_dir)
+        finally:
+            # executed before return
+            os.chdir(cwd)
+
+
 def list_repo(directory):
     """Find recursively git and svn repositories."""
     git_repos = []
@@ -39,7 +61,11 @@ def list_repo(directory):
             if any(dirpath.startswith(svn_repo) for svn_repo in svn_repos):
                 # don't allow svn repos inside others (assumed to be externals)
                 continue
-            svn_repos.append(dirpath)
+            try:
+                repo_root = get_svn_root(dirpath)
+                svn_repos.append((dirpath, repo_root))
+            except ValueError as e:
+                print(e)
     return git_repos, svn_repos
 
 
