@@ -4,16 +4,17 @@ from subprocess import check_output, CalledProcessError
 
 
 def get_config(git_dir):
-    """Find useful config of a git directory."""
+    """Find useful configuration of a git directory."""
     try:
         cwd = os.getcwd()
         os.chdir(git_dir)
         out = check_output(['git', 'config', '--local', '--list'],
                            universal_newlines=True)
-        config = dict(line.split('=') for line in out.strip().split())
+        config = dict(line.split('=') for line in out.strip().split('\n')
+                      if line)
         for k in list(config.keys()):
             if k.startswith('core.'):
-                config.pop(k)
+                config.pop(k)   # remove core parameters
         return config
     except CalledProcessError:
         raise ValueError("%s does not seem to be a proper git repository." %
@@ -32,8 +33,8 @@ def list_repo(directory):
             try:
                 config = get_config(dirpath)
                 git_repos.append((dirpath, config))
-            except ValueError:
-                pass
+            except ValueError as e:
+                print(e)
         elif '.svn' in dirnames:
             if any(dirpath.startswith(svn_repo) for svn_repo in svn_repos):
                 # don't allow svn repos inside others (assumed to be externals)
