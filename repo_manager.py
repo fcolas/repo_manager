@@ -1,6 +1,7 @@
 import argparse
 import os
-from subprocess import check_output, CalledProcessError
+import sys
+from subprocess import call, check_output, CalledProcessError
 from pprint import pformat
 
 
@@ -20,7 +21,7 @@ def get_config(git_dir):
                 config.pop(k)   # remove gui parameters
         return config
     except CalledProcessError:
-        raise ValueError("%s does not seem to be a proper git repository." %
+        raise ValueError('%s does not seem to be a proper git repository.' %
                          git_dir)
     finally:
         # executed before return
@@ -39,11 +40,11 @@ def get_svn_root(svn_dir):
                           out.strip().split('\n') if line)
             return config['Repository Root']
         except CalledProcessError:
-            raise ValueError("%s does not seem to be a proper svn repository." %
+            raise ValueError('%s does not seem to be a proper svn repository.' %
                              svn_dir)
         except KeyError:
-            raise ValueError("Could not deduce the address of the repository in"
-                             " %s." % svn_dir)
+            raise ValueError('Could not deduce the address of the repository in'
+                             ' %s.' % svn_dir)
         finally:
             # executed before return
             os.chdir(cwd)
@@ -77,6 +78,37 @@ def list_repo(directories, excluded_dirs):
                     print(e)
 
 
+def install(repo_file, directory):
+    """Install repositories listed in repo_file into directory."""
+    def install_git(name, config):
+        """Install git repository with its config."""
+        if 'remote.origin.url' in config:
+            origin_url = config['remote.origin.url']
+        else:
+            print('No origin remote for', name)
+            return
+        config_str = ' '.join('-c %s=%s' % (k, v) for k, v in config.items())
+        call(['git', 'clone', origin_url, config_str, name])
+
+    def install_svn(name, root):
+        """Checkout svn repository."""
+        pass
+
+    os.makedirs(directory, exist_ok=True)
+    # TODO better deserialization
+    repo_list = eval(open(repo_file).read())
+    cwd = os.getcwd()
+    os.chdir(directory)
+    for repo_type, repo_name, config in repo_list:
+        if repo_type == 'git':
+            install_git(repo_name, config)
+        elif repo_type == 'svn':
+            install_svn(repo_name, config)
+        else:
+            print('Unknown repository type:', repo_type, 'for', repo_name)
+    os.chdir(cwd)
+
+
 def main():
     # getting parameters
     parser = argparse.ArgumentParser(description='Manage repositories.')
@@ -86,9 +118,24 @@ def main():
                         help='directories to exclude from search.')
     parser.add_argument('-f', '--repo_file', nargs=1,
                         help='file listing of a repository.')
+    parser.add_argument('-i', '--install', nargs='?',
+                        help='install repositories')
     args = parser.parse_args()
+    # installing
+    if args.install is not None:
+        if not args.install:
+            install_dir = '.'
+        else:
+            install_dir = args.install
+        if args.repo_file is None:
+            print('install command requires a repo_file.')
+            sys.exit(1)
+        if args.list is not None:
+            print('install and list commands are not compatible.')
+            sys.exit(2)
+        install(args.repo_file[0], install_dir)
     # listing
-    if args.list is not None:
+    elif args.list is not None:
         if not args.list:
             args.list = ['.']
         if args.repo_file is not None:
