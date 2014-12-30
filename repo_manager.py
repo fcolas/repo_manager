@@ -110,6 +110,21 @@ def install(repo_file, directory):
     os.chdir(cwd)
 
 
+def save_list(search_dirs, filename, exclude_dirs):
+    """Save list of repositories."""
+    with open(filename, 'w') as repo_file:
+        # TODO better serialization
+        repo_file.write(pformat(list(list_repo(search_dirs, exclude_dirs)),
+                                indent=2, width=1))
+        repo_file.write('\n')
+
+
+def echo_list(search_dirs, exclude_dirs):
+    """Print list of directories."""
+    for repo_type, repo_dir, config in list_repo(search_dirs, exclude_dirs):
+        print('%s: %s' % (repo_type, repo_dir))
+
+
 def main():
     # getting parameters
     parser = argparse.ArgumentParser(description='Manage repositories.')
@@ -140,16 +155,9 @@ def main():
         if not args.list:
             args.list = ['.']
         if args.repo_file is not None:
-            with open(args.repo_file[0], 'w') as repo_file:
-                # TODO better serialization
-                repo_file.write(pformat(list(list_repo(args.list,
-                                                       args.exclude)),
-                                        indent=2, width=1))
-                repo_file.write('\n')
+            save_list(args.list, args.repo_file[0], args.exclude)
         else:
-            for repo_type, repo_dir, config in list_repo(args.list,
-                                                         args.exclude):
-                print('%s: %s' % (repo_type, repo_dir))
+            echo_list(args.list, args.exclude)
 
 
 if __name__ == '__main__':
