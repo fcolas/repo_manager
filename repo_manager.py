@@ -52,13 +52,16 @@ def get_svn_root(svn_dir):
 
 def list_repo(directories, excluded_dirs):
     """Find recursively git and svn repositories."""
+    def is_excluded(path, abs_excluded_dirs=[os.path.abspath(d) for d in
+                                             excluded_dirs]):
+        """Check that given path is not in excluded dirs."""
+        abspath = os.path.abspath(path)
+        return any(abspath.startswith(excluded_dir) for excluded_dir in
+                   abs_excluded_dirs)
     svn_repos = []
-    done_dirs = []
     for directory in directories:
-        if any(directory.startswith(done_dir) for done_dir in done_dirs):
-            continue
         for dirpath, dirnames, filenames in os.walk(directory):
-            if any(dirpath.startswith(excluded) for excluded in excluded_dirs):
+            if is_excluded(dirpath):
                 continue
             if '.git' in dirnames:
                 try:

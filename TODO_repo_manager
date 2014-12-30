@@ -1,6 +1,5 @@
 - better serialization of the list
 - put list into repo
-- normalize paths for exclusion checks
 - warning for git repos without origin
 - better output for install
 - better output for update
