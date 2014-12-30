@@ -2,3 +2,4 @@
 - put list into repo
 - update from list
 - normalize paths for exclusion checks
+- warning for git repos without origin
