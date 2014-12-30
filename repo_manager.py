@@ -96,8 +96,7 @@ def install(repo_file, directory):
         call(['svn', 'checkout', root, name])
 
     os.makedirs(directory, exist_ok=True)
-    # TODO better deserialization
-    repo_list = eval(open(repo_file).read())
+    repo_list = load_list(repo_file)
     cwd = os.getcwd()
     os.chdir(directory)
     for repo_type, repo_name, config in repo_list:
@@ -108,6 +107,14 @@ def install(repo_file, directory):
         else:
             print('Unknown repository type:', repo_type, 'for', repo_name)
     os.chdir(cwd)
+
+
+def load_list(filename):
+    """Load a saved list of repositories."""
+    with open(filename) as repo_file:
+        # TODO better deserialization
+        repo_list = eval(repo_file.read())
+    return repo_list
 
 
 def save_list(search_dirs, filename, exclude_dirs):
