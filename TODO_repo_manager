@@ -2,3 +2,6 @@
 - put list into repo
 - normalize paths for exclusion checks
 - warning for git repos without origin
+- colored output for list
+- better output for install
+- better output for update
