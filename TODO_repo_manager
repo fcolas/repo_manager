@@ -1,3 +1,4 @@
 - better serialization of the list
 - put list into repo
 - update from list
+- normalize paths for exclusion checks
