@@ -1,4 +1,2 @@
 - better serialization of the list
 - put list into repo
-- warning for git repos without origin
-- better output for install

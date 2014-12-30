@@ -88,7 +88,7 @@ def install(repo_file, directory):
         if 'remote.origin.url' in config:
             origin_url = config['remote.origin.url']
         else:
-            print('No origin remote for', name)
+            print('No remote named origin: nothing done.')
             return
         config_str = ' '.join('-c %s=%s' % (k, v) for k, v in config.items())
         call(['git', 'clone', origin_url, config_str, name])
@@ -104,8 +104,12 @@ def install(repo_file, directory):
     os.chdir(directory)
     for repo_type, repo_name, config in repo_list:
         if repo_type == 'git':
+            print("\033[1;97mInstalling \033[1;92m%s\033[1;97m...\033[0m" %
+                  repo_name)
             install_git(repo_name, config)
         elif repo_type == 'svn':
+            print("\033[1;97mInstalling \033[1;94m%s\033[1;97m...\033[0m" %
+                  repo_name)
             install_svn(repo_name, config)
         else:
             print('Unknown repository type:', repo_type, 'for', repo_name)
