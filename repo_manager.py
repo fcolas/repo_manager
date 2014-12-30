@@ -92,7 +92,8 @@ def install(repo_file, directory):
 
     def install_svn(name, root):
         """Checkout svn repository."""
-        pass
+        # TODO test!
+        call(['svn', 'checkout', root, name])
 
     os.makedirs(directory, exist_ok=True)
     # TODO better deserialization
