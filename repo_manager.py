@@ -129,7 +129,18 @@ def save_list(search_dirs, filename, exclude_dirs):
 def echo_list(search_dirs, exclude_dirs):
     """Print list of directories."""
     for repo_type, repo_dir, config in list_repo(search_dirs, exclude_dirs):
-        print('%s: %s' % (repo_type, repo_dir))
+        if repo_type == 'git':
+            if 'remote.origin.url' in config:
+                origin = config['remote.origin.url']
+            else:
+                origin = '\033[0;31mno remote origin'
+            print('\033[0;32mgit\033[0m: %s (\033[0;35m%s\033[0m)' %
+                  (repo_dir, origin))
+        elif repo_type == 'svn':
+            print('\033[0;34msvn\033[0m: %s (\033[0;35m%s\033[0m)' %
+                  (repo_dir, config))
+        else:
+            print('Unknown repository type:', repo_type, 'for', repo_dir)
 
 
 def update(repo_list):
