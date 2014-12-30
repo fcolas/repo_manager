@@ -160,8 +160,12 @@ def update(repo_list):
     for repo_type, repo_dir, _ in repo_list:
         os.chdir(repo_dir)
         if repo_type == 'git':
+            print("\033[1;97mUpdating \033[1;92m%s\033[1;97m...\033[0m" %
+                  repo_dir)
             update_git()
         elif repo_type == 'svn':
+            print("\033[1;97mUpdating \033[1;94m%s\033[1;97m...\033[0m" %
+                  repo_dir)
             update_svn()
         else:
             print('Unknown repository type:', repo_type, 'for', repo_dir)
