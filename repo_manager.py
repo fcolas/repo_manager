@@ -132,6 +132,28 @@ def echo_list(search_dirs, exclude_dirs):
         print('%s: %s' % (repo_type, repo_dir))
 
 
+def update(repo_list):
+    """Update repositories from the given list."""
+    def update_git():
+        """Update a git repository."""
+        call(['git', 'pull'])
+
+    def update_svn():
+        """Update a svn repository."""
+        call(['svn', 'update'])
+
+    cwd = os.getcwd()
+    for repo_type, repo_dir, _ in repo_list:
+        os.chdir(repo_dir)
+        if repo_type == 'git':
+            update_git()
+        elif repo_type == 'svn':
+            update_svn()
+        else:
+            print('Unknown repository type:', repo_type, 'for', repo_dir)
+    os.chdir(cwd)
+
+
 def main():
     # getting parameters
     parser = argparse.ArgumentParser(description='Manage repositories.')
@@ -143,7 +165,13 @@ def main():
                         help='file listing of a repository.')
     parser.add_argument('-i', '--install', nargs='?',
                         help='install repositories')
+    parser.add_argument('-u', '--update', default=False, action='store_true',
+                        help='update repositories.')
     args = parser.parse_args()
+    # exclude only used with list
+    if args.exclude and (args.list is None):
+        print('exclude option is only used with list.')
+        sys.exit(4)
     # installing
     if args.install is not None:
         if not args.install:
@@ -156,7 +184,20 @@ def main():
         if args.list is not None:
             print('install and list commands are not compatible.')
             sys.exit(2)
+        if args.update:
+            print('install and update commands are not compatible.')
+            sys.exit(3)
         install(args.repo_file[0], install_dir)
+    # updating
+    elif args.update:
+        if (args.repo_file is None) == (args.list is None):
+            print('update command needs either list or repo_file.')
+            sys.exit(5)
+        if args.repo_file is not None:
+            repo_list = load_list(args.repo_file[0])
+        else:
+            repo_list = list_repo(args.list, args.exclude)
+        update(repo_list)
     # listing
     elif args.list is not None:
         if not args.list:
@@ -165,6 +206,9 @@ def main():
             save_list(args.list, args.repo_file[0], args.exclude)
         else:
             echo_list(args.list, args.exclude)
+    else:
+        # TODO better message
+        print('Nothing to do.')
 
 
 if __name__ == '__main__':
