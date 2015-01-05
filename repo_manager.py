@@ -2,7 +2,7 @@ import argparse
 import os
 import sys
 from subprocess import call, check_output, CalledProcessError
-from pprint import pformat
+import json
 
 
 def get_config(git_dir):
@@ -119,18 +119,15 @@ def install(repo_file, directory):
 def load_list(filename):
     """Load a saved list of repositories."""
     with open(filename) as repo_file:
-        # TODO better deserialization
-        repo_list = eval(repo_file.read())
+        repo_list = json.load(repo_file)
     return repo_list
 
 
 def save_list(search_dirs, filename, exclude_dirs):
     """Save list of repositories."""
     with open(filename, 'w') as repo_file:
-        # TODO better serialization
-        repo_file.write(pformat(list(list_repo(search_dirs, exclude_dirs)),
-                                indent=2, width=1))
-        repo_file.write('\n')
+        json.dump(list(list_repo(search_dirs, exclude_dirs)), repo_file,
+                  indent=2)
 
 
 def echo_list(search_dirs, exclude_dirs):
