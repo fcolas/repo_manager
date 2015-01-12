@@ -1,3 +1,4 @@
+- put list into repo
 - replace walk with listdir for better handling of exclusion
 - error handling
 - usage
