@@ -178,6 +178,17 @@ def update(repo_list):
     os.chdir(cwd)
 
 
+def refresh_list(filename):
+    """Refresh a list of repositories."""
+    with open(filename) as repo_file:
+        descr = json.load(repo_file)
+    if not (('search_dirs' in descr) and ('exclude_dirs' in descr)):
+        raise ValueError('Invalid repository list')
+    repo_list = list(list_repo(descr['search_dirs'], descr['exclude_dirs']))
+    descr['repo_list'] = repo_list
+    with open(filename, 'w') as repo_file:
+        json.dump(descr, repo_file, indent=2)
+
 def main():
     # getting parameters
     parser = argparse.ArgumentParser(description='Manage repositories.')
@@ -191,6 +202,8 @@ def main():
                         help='install repositories')
     parser.add_argument('-u', '--update', default=False, action='store_true',
                         help='update repositories.')
+    parser.add_argument('-r', '--refresh', nargs=1,
+                        help='refresh list of repositories in the file.')
     args = parser.parse_args()
     # exclude only used with list
     if args.exclude and (args.list is None):
@@ -211,6 +224,9 @@ def main():
         if args.update:
             print('install and update commands are not compatible.')
             sys.exit(3)
+        if args.refresh is not None:
+            print('install and refresh commands are not compatible.')
+            sys.exit(6)
         install(args.repo_file[0], install_dir)
     # updating
     elif args.update:
@@ -230,6 +246,8 @@ def main():
             save_list(args.list, args.repo_file[0], args.exclude)
         else:
             echo_list(args.list, args.exclude)
+    elif args.refresh is not None:
+        refresh_list(args.refresh[0])
     else:
         # TODO better message
         print('Nothing to do.')
