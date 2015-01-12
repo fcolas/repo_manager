@@ -121,15 +121,18 @@ def install(repo_file, directory):
 def load_list(filename):
     """Load a saved list of repositories."""
     with open(filename) as repo_file:
-        repo_list = json.load(repo_file)
-    return repo_list
+        descr = json.load(repo_file)
+    return descr['repo_list']
 
 
 def save_list(search_dirs, filename, exclude_dirs):
     """Save list of repositories."""
+    repo_list = list(list_repo(search_dirs, exclude_dirs))
+    descr = {'search_dirs': search_dirs,
+             'exclude_dirs': exclude_dirs,
+             'repo_list': repo_list}
     with open(filename, 'w') as repo_file:
-        json.dump(list(list_repo(search_dirs, exclude_dirs)), repo_file,
-                  indent=2)
+        json.dump(descr, repo_file, indent=2)
 
 
 def echo_list(search_dirs, exclude_dirs):
