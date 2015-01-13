@@ -60,10 +60,11 @@ def list_repo(directories, excluded_dirs):
         abspath = os.path.abspath(path)
         return any(abspath.startswith(excluded_dir) for excluded_dir in
                    abs_excluded_dirs)
-    svn_repos = []
     for directory in directories:
-        for dirpath, dirnames, filenames in os.walk(directory):
+        for dirpath, dirnames, filenames in os.walk(directory, topdown=True):
             if is_excluded(dirpath):
+                # empty subdirectories as they would also be excluded
+                dirnames[:] = []
                 continue
             if '.git' in dirnames:
                 try:
@@ -72,12 +73,10 @@ def list_repo(directories, excluded_dirs):
                 except ValueError as e:
                     print(e)
             elif '.svn' in dirnames:
-                if any(dirpath.startswith(svn_repo) for svn_repo in svn_repos):
-                    # don't allow svn repos inside others (externals assumed)
-                    continue
                 try:
                     repo_root = get_svn_root(dirpath)
-                    svn_repos.append(dirpath)
+                    # exclude subdirectories
+                    dirnames[:] = []
                     yield ('svn', dirpath, repo_root)
                 except ValueError as e:
                     print(e)
