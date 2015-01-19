@@ -188,9 +188,16 @@ def refresh_list(filename):
     with open(filename, 'w') as repo_file:
         json.dump(descr, repo_file, indent=2)
 
+
 def main():
     # getting parameters
-    parser = argparse.ArgumentParser(description='Manage repositories.')
+    usage = '''%(prog)s -h
+       %(prog)s -l <SEARCH_DIRS> [-e <EXCLUDE_DIRS>] [-f FILENAME]
+       %(prog)s -i [INSTALL_DIR] -f FILENAME
+       %(prog)s -u {-f FILENAME | -l <SEARCH_DIRS> [-e <EXCLUDE_DIRS>]}
+       %(prog)s -r -f FILENAME'''
+    parser = argparse.ArgumentParser(description='Manage repositories.',
+                                     usage=usage)
     parser.add_argument('-l', '--list', nargs='*',
                         help='the directories to search repositories in.')
     parser.add_argument('-e', '--exclude', nargs='+', default=[],
