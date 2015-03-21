@@ -41,7 +41,12 @@ def get_svn_root(svn_dir):
                                stderr=dev_null)
             config = dict(line.split(': ', 1) for line in
                           out.strip().split('\n') if line)
-            return config['Repository Root']
+            abs_svn_dir = os.path.abspath(svn_dir)
+            abs_svn_root = os.path.abspath(config['Working Copy Root Path'])
+            if abs_svn_dir != abs_svn_root:
+                raise ValueError('%s is not the root of the repository.' %
+                                 svn_dir)
+            return config['URL']
         except CalledProcessError:
             raise ValueError('%s does not seem to be a proper svn repository.' %
                              svn_dir)
@@ -97,7 +102,6 @@ def install(repo_file, directory):
 
     def install_svn(name, root):
         """Checkout svn repository."""
-        # TODO test!
         call(['svn', 'checkout', root, name])
 
     os.makedirs(directory, exist_ok=True)
