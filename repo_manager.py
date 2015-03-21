@@ -2,6 +2,7 @@
 # not compatible with Python2 as we're using exist_ok flag in os.makedirs
 import argparse
 import os
+import os.path
 import sys
 from subprocess import call, check_output, CalledProcessError
 import json
@@ -103,7 +104,9 @@ def install(repo_file, directory):
     repo_list = load_list(repo_file)
     cwd = os.getcwd()
     os.chdir(directory)
+    common_prefix = os.path.commonprefix(list(zip(*repo_list))[1])
     for repo_type, repo_name, config in repo_list:
+        repo_name = os.path.relpath(repo_name, common_prefix)
         if repo_type == 'git':
             print("\033[1;97mInstalling \033[1;92m%s\033[1;97m...\033[0m" %
                   repo_name)
