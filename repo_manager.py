@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-from __future__ import print_function
+#!/usr/bin/env python3
+# not compatible with Python2 as we're using exist_ok flag in os.makedirs
 import argparse
 import os
 import sys
